@@ -1,4 +1,4 @@
-# TAILOR AI 
+# Resume Tailor
 ## Overview
 This project provides an AI-powered tool to optimize resumes  and boost resume score for surpassing Applicant Tracking Systems (ATS) using advanced language models. It allows users to upload their resumes and job descriptions, tailoring the resume to better match job requirements. 
 
