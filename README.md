@@ -22,8 +22,7 @@ This project provides an AI-powered tool to optimize resumes  and boost resume s
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/ShubhamBaghel309/TailorAI.git
    ```
 
 2. Install the required packages:
