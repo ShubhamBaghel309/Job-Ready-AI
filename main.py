@@ -12,6 +12,18 @@ import json
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+import nltk
+import re
+
+# Download required NLTK data
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +34,9 @@ class ResumeTailor:
         """Initialize the ResumeTailor with necessary components."""
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY not found in environment variables")
+        
+        # Setup NLTK data
+        self.setup_nltk()
             
         self.llm = ChatGroq(
             model="llama-3.1-70b-versatile",
@@ -32,7 +47,55 @@ class ResumeTailor:
             max_retries=2
         )
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words('english'))
+
+    def setup_nltk(self):
+        """Ensure all required NLTK data is downloaded."""
+        try:
+            # Create NLTK data directory if it doesn't exist
+            import os
+            nltk_data_dir = os.path.expanduser('~/nltk_data')
+            if not os.path.exists(nltk_data_dir):
+                os.makedirs(nltk_data_dir)
+            
+            # Download required NLTK data with explicit download directory
+            for resource in ['punkt', 'stopwords', 'wordnet']:
+                try:
+                    nltk.data.find(f'tokenizers/{resource}')
+                except LookupError:
+                    nltk.download(resource, download_dir=nltk_data_dir, quiet=True)
+        except Exception as e:
+            st.warning(f"NLTK setup warning: {str(e)}. Using basic tokenization as fallback.")
+            
+    def preprocess_text(self, text: str) -> str:
+        """Preprocess text for TF-IDF vectorization."""
+        try:
+            # Convert to lowercase
+            text = text.lower()
+            
+            # Remove special characters and numbers
+            text = re.sub(r'[^a-zA-Z\s]', ' ', text)
+            
+            try:
+                # Try NLTK tokenization
+                tokens = word_tokenize(text)
+            except:
+                # Fallback to basic splitting if NLTK fails
+                tokens = text.split()
+            
+            try:
+                # Try removing stopwords and lemmatizing
+                tokens = [self.lemmatizer.lemmatize(token) for token in tokens if token not in self.stop_words]
+            except:
+                # Fallback to just using tokens if lemmatization fails
+                tokens = [token for token in tokens if len(token) > 2]
+            
+            return ' '.join(tokens)
+        except Exception as e:
+            st.warning(f"Text preprocessing warning: {str(e)}. Using original text.")
+            return text
+
     def extract_text_from_pdf(self, pdf_file) -> str:
         """Extract text content from a PDF file using PyPDF2."""
         pdf_reader = PdfReader(pdf_file)
@@ -99,30 +162,110 @@ class ResumeTailor:
                     'missing_skills': []
                 }
             
-            # Preprocess resume text to extract potential skills
-            # Split into sentences and words to better match individual skills
-            resume_words = ' '.join([word.strip() for word in resume_text.replace('\n', ' ').split()])
+            # Common tech variations dictionary
+            tech_variations = {
+                'ml': ['machine learning', 'ml'],
+                'ai': ['artificial intelligence', 'ai'],
+                'llm': ['large language model', 'llm', 'llama', 'gpt', 'language model'],
+                'nlp': ['natural language processing', 'nlp'],
+                'js': ['javascript', 'js'],
+                'ts': ['typescript', 'ts'],
+                'py': ['python', 'py'],
+                'react': ['reactjs', 'react.js', 'react'],
+                'node': ['nodejs', 'node.js', 'node'],
+                'db': ['database', 'db'],
+                'ui': ['user interface', 'ui'],
+                'ux': ['user experience', 'ux'],
+                'api': ['apis', 'api', 'restful', 'rest'],
+                'aws': ['amazon web services', 'aws'],
+                'gcp': ['google cloud platform', 'gcp'],
+                'azure': ['microsoft azure', 'azure'],
+                'k8s': ['kubernetes', 'k8s'],
+                'ci/cd': ['continuous integration', 'continuous deployment', 'ci/cd', 'cicd'],
+                'oop': ['object oriented programming', 'object-oriented', 'oop'],
+                'cv': ['computer vision', 'cv']
+            }
             
-            # Convert resume text and skills into embeddings
-            resume_embedding = self.embedding_model.encode(resume_words)
-            job_skills_embeddings = self.embedding_model.encode(job_requirements['skills'])
+            # Preprocess resume text
+            resume_text_lower = resume_text.lower()
+            resume_sentences = [sent.strip() for sent in resume_text.split('.')]
             
-            # Calculate cosine similarity
-            similarities = resume_embedding @ job_skills_embeddings.T / (
-                np.linalg.norm(resume_embedding) * np.linalg.norm(job_skills_embeddings, axis=1)
-            )
-            
-            # Use a lower threshold for better matching
-            threshold = 0.3
-            
+            # First pass: Direct keyword matching with variations
             matched_skills = []
-            missing_skills = []
+            remaining_skills = []
             
-            for idx, skill in enumerate(job_requirements['skills']):
-                if similarities[idx] > threshold:
+            for skill in job_requirements['skills']:
+                skill_lower = skill.lower()
+                # Check if this skill has known variations
+                variations = []
+                for var_key, var_list in tech_variations.items():
+                    if skill_lower in var_list:
+                        variations.extend(var_list)
+                    # Also check if any variation is in the skill name
+                    for var in var_list:
+                        if var in skill_lower:
+                            variations.extend(var_list)
+                
+                # Add common text variations
+                variations.extend([
+                    skill_lower,
+                    skill_lower.replace(' ', ''),
+                    skill_lower.replace('-', ''),
+                    skill_lower.replace('.', ''),
+                    skill_lower.replace('/', '')
+                ])
+                
+                # Remove duplicates and empty strings
+                variations = list(set(filter(None, variations)))
+                
+                if any(var in resume_text_lower for var in variations):
                     matched_skills.append(skill)
                 else:
-                    missing_skills.append(skill)
+                    remaining_skills.append(skill)
+            
+            # Second pass: Semantic matching for remaining skills
+            if remaining_skills:
+                # Prepare embeddings for remaining skills and their variations
+                skill_texts = []
+                skill_map = {}  # Map expanded texts back to original skills
+                
+                for skill in remaining_skills:
+                    skill_lower = skill.lower()
+                    variations = []
+                    # Add known variations
+                    for var_list in tech_variations.values():
+                        if any(var in skill_lower for var in var_list):
+                            variations.extend(var_list)
+                    # Add the original skill
+                    variations.append(skill_lower)
+                    # Remove duplicates
+                    variations = list(set(variations))
+                    
+                    for var in variations:
+                        skill_texts.append(var)
+                        skill_map[var] = skill
+                
+                # Convert to embeddings
+                skill_embeddings = self.embedding_model.encode(skill_texts)
+                resume_embeddings = self.embedding_model.encode(resume_sentences)
+                
+                # Calculate similarities
+                similarities = resume_embeddings @ skill_embeddings.T
+                max_similarities = np.max(similarities, axis=0)
+                
+                # Use a moderate threshold for semantic matching
+                threshold = 0.6  # Higher threshold for more precise matching
+                
+                matched_variations = set()
+                for idx, skill_text in enumerate(skill_texts):
+                    if max_similarities[idx] > threshold:
+                        original_skill = skill_map[skill_text]
+                        if original_skill not in matched_skills:
+                            matched_skills.append(original_skill)
+                            matched_variations.add(skill_text)
+            
+            # Get missing skills
+            missing_skills = [skill for skill in job_requirements['skills'] if skill not in matched_skills]
             
             return {
                 'matched_skills': matched_skills,
@@ -137,30 +280,69 @@ class ResumeTailor:
     
     def tailor_resume(self, resume_text: str, job_requirements: Dict, skill_matches: Dict) -> Dict:
         """Generate a tailored resume using the LLM and provide improvement analysis."""
-        # First, get the tailored resume content
-        resume_prompt = f"""Rewrite the following resume to better match the job requirements. 
-        Focus on quantifiable achievements and emphasize these matched skills: {skill_matches['matched_skills']}.
-        Also, incorporate these missing but relevant skills if the candidate has related experience: {skill_matches['missing_skills']}.
+        resume_prompt = f"""You are an expert ATS optimization specialist. Rewrite the following resume to maximize its ATS score while maintaining readability.
+        The goal is to significantly improve the resume's ATS score by incorporating job-specific keywords and requirements.
+
+        Job Requirements to Target:
+        1. Required Skills: {job_requirements.get('skills', [])}
+        2. Experience Needed: {job_requirements.get('experience', 'Not specified')}
+        3. Responsibilities: {job_requirements.get('responsibilities', [])}
+
+        Current Status:
+        - Matched Skills: {skill_matches['matched_skills']}
+        - Missing Skills: {skill_matches['missing_skills']}
+
+        Optimization Requirements:
+        1. Keyword Integration:
+           - Add ALL missing required skills with relevant context
+           - Place important keywords in prominent positions
+           - Use exact phrases from job requirements
+           - Maintain optimal keyword density (5-8%)
         
+        2. Format Optimization:
+           - Use clear section headers: Summary, Experience, Skills, Education
+           - Start bullets with strong action verbs
+           - Ensure consistent formatting
+           - Use standard bullet points
+        
+        3. Content Enhancement:
+           - Add quantifiable metrics to achievements
+           - Highlight experience matching job requirements
+           - Emphasize transferable skills
+           - Use industry-standard terminology
+        
+        4. ATS Guidelines:
+           - Use full terms before abbreviations
+           - Avoid tables, columns, and graphics
+           - Use standard job titles
+           - Place keywords near the start of bullet points
+
         Original Resume:
         {resume_text}
         
         Job Requirements:
         {json.dumps(job_requirements, indent=2)}
         
-        Return ONLY the tailored resume text, without any explanations or analysis.
+        Return ONLY the optimized resume text. Ensure EVERY required skill and responsibility is addressed.
         """
         
         tailored_resume = str(self.llm.invoke(resume_prompt).content)
         
         # Then, get the analysis separately
         analysis_prompt = f"""Analyze how the resume matches the job requirements and provide a detailed improvement analysis.
+        
+        IMPORTANT RULES:
+        1. ONLY mention skills that are EXPLICITLY stated in the resume
+        2. DO NOT make assumptions about skills not directly mentioned
+        3. DO NOT infer skills from project descriptions unless explicitly stated
+        4. If a skill is missing, list it in missing skills, do not try to find similar alternatives
+        5. For matched skills, quote the exact text from resume that demonstrates the skill
+        
         Focus on these aspects:
-        1. Skills alignment
-        2. Experience relevance
-        3. Achievement emphasis
-        4. Missing keywords
-        5. Suggested improvements
+        1. Skills alignment - EXACT matches only
+        2. Experience relevance - DIRECT matches only
+        3. Achievement emphasis - ACTUAL achievements mentioned
+        4. Missing keywords - List ALL required skills not found in resume
         
         Original Resume:
         {resume_text}
@@ -168,37 +350,67 @@ class ResumeTailor:
         Job Requirements:
         {json.dumps(job_requirements, indent=2)}
         
-        Matched Skills: {skill_matches['matched_skills']}
-        Missing Skills: {skill_matches['missing_skills']}
+        Currently Matched Skills (verified): {skill_matches['matched_skills']}
+        Currently Missing Skills (verified): {skill_matches['missing_skills']}
         
-        Provide the analysis in JSON format with these keys:
+        Return a JSON object with this exact structure:
         {{
-          "improvements": ["list of specific improvements needed"],
-          "skills_analysis": {{
-              "matched": ["detailed explanation of how each matched skill aligns"],
-              "missing": ["suggestions for addressing each missing skill"]
-          }},
-          "achievement_emphasis": ["list of quantifiable achievements that should be highlighted"],
-          "keyword_optimization": ["key terms that should be added for ATS"]
+            "improvements": [
+                "specific improvements needed based on ACTUAL gaps"
+            ],
+            "skills_analysis": {{
+                "matched": [
+                    "ONLY skills explicitly found in resume with exact quotes"
+                ],
+                "missing": [
+                    "ONLY skills from job requirements that are completely absent from resume"
+                ]
+            }},
+            "achievement_emphasis": [
+                "ONLY quantifiable achievements actually present in resume"
+            ],
+            "keyword_optimization": [
+                "ONLY keywords from job requirements that should be added"
+            ]
         }}
+        
+        Remember: Do not infer, assume, or suggest skills that are not explicitly stated in the resume.
         """
         
         analysis_response = self.llm.invoke(analysis_prompt)
         try:
             content = str(analysis_response.content).strip()
-            if content.startswith("```json"):
-                content = content.split("```json")[1]
-            if content.endswith("```"):
-                content = content.rsplit("```", 1)[0]
-            analysis_result = json.loads(content.strip())
-            analysis_result["tailored_resume"] = tailored_resume
-            return analysis_result
-        except json.JSONDecodeError:
+            # More robust JSON extraction
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0]
+            content = content.strip()
+            
+            try:
+                analysis_result = json.loads(content)
+                analysis_result["tailored_resume"] = tailored_resume
+                return analysis_result
+            except json.JSONDecodeError as json_err:
+                return {
+                    "improvements": ["Error analyzing improvements"],
+                    "skills_analysis": {
+                        "matched": ["Error analyzing matched skills"],
+                        "missing": ["Error analyzing missing skills"]
+                    },
+                    "achievement_emphasis": ["Error analyzing achievements"],
+                    "keyword_optimization": ["Error analyzing keywords"],
+                    "tailored_resume": tailored_resume
+                }
+        except Exception as e:
             return {
                 "improvements": ["Error analyzing improvements"],
-                "skills_analysis": {"matched": [], "missing": []},
-                "achievement_emphasis": [],
-                "keyword_optimization": [],
+                "skills_analysis": {
+                    "matched": ["Error analyzing matched skills"],
+                    "missing": ["Error analyzing missing skills"]
+                },
+                "achievement_emphasis": ["Error analyzing achievements"],
+                "keyword_optimization": ["Error analyzing keywords"],
                 "tailored_resume": tailored_resume
             }
     
@@ -227,19 +439,133 @@ class ResumeTailor:
         Position: {job_requirements.get('title', 'the position')}
         
         Resume Context:
-        {resume_text[:500]}  # Using first 500 characters for context
+        {resume_text}  # use resume_text for context
         
         Format the email with:
         - Professional subject line
         - Greeting
         - 2-3 concise paragraphs
         - Professional closing
-        
+        - keep it concise
         Return the complete email with subject line.
         """
         
         response = self.llm.invoke(prompt)
         return str(response.content)
+
+    def calculate_ats_score(self, resume_text: str, job_requirements: Dict, skill_matches: Dict) -> Dict:
+        """Calculate a comprehensive ATS score using TF-IDF and cosine similarity."""
+        try:
+            # Preprocess texts
+            processed_resume = self.preprocess_text(resume_text)
+            
+            # Combine job requirements into a single text
+            job_text = f"{job_requirements.get('title', '')} "
+            job_text += f"{job_requirements.get('experience', '')} "
+            job_text += ' '.join(job_requirements.get('skills', []))
+            job_text += ' '.join(job_requirements.get('responsibilities', []))
+            processed_job = self.preprocess_text(job_text)
+            
+            # Create TF-IDF vectors
+            vectorizer = TfidfVectorizer()
+            tfidf_matrix = vectorizer.fit_transform([processed_job, processed_resume])
+            
+            # Calculate cosine similarity
+            similarity_matrix = (tfidf_matrix * tfidf_matrix.T).toarray()
+            base_similarity_score = similarity_matrix[0][1]  # Similarity between job and resume
+            
+            # Calculate keyword density
+            feature_names = vectorizer.get_feature_names_out()
+            resume_vector = tfidf_matrix[1].toarray()[0]
+            keyword_density = {
+                word: int(freq * 100)  # Convert to percentage and round
+                for word, freq in zip(feature_names, resume_vector)
+                if freq > 0
+            }
+            
+            # Calculate section scores
+            total_matched_skills = len(skill_matches['matched_skills'])
+            total_required_skills = len(job_requirements.get('skills', []))
+            
+            # Keyword match score (30 points max)
+            keyword_score = int(30 * (base_similarity_score * 0.7 + (total_matched_skills / max(total_required_skills, 1)) * 0.3))
+            
+            # Experience score (25 points max)
+            experience_score = int(25 * base_similarity_score)
+            
+            # Skills match score (25 points max)
+            skills_score = int(25 * (total_matched_skills / max(total_required_skills, 1)))
+            
+            # Format score (10 points max) - Based on section headers and structure
+            format_indicators = ['experience', 'education', 'skills', 'summary', 'objective', 'projects']
+            format_score = sum(10 for indicator in format_indicators if indicator in processed_resume) // len(format_indicators)
+            
+            # Education score (10 points max) - Based on education section presence
+            education_score = 10 if 'education' in processed_resume.lower() else 5
+            
+            # Calculate total score
+            total_score = keyword_score + experience_score + skills_score + education_score + format_score
+            
+            # Prepare improvement suggestions based on scores
+            suggestions = []
+            if keyword_score < 20:
+                suggestions.append("Incorporate more key terms from the job description")
+            if experience_score < 15:
+                suggestions.append("Better align experience descriptions with job requirements")
+            if skills_score < 15:
+                suggestions.append("Add more relevant technical skills mentioned in the job posting")
+            if format_score < 7:
+                suggestions.append("Improve resume structure with clear section headers")
+            if education_score < 7:
+                suggestions.append("Enhance education section with relevant details")
+            
+            return {
+                "total_score": total_score,
+                "section_scores": {
+                    "keyword_match": {
+                        "score": keyword_score,
+                        "max": 30,
+                        "details": [f"Matched {total_matched_skills} out of {total_required_skills} required skills"]
+                    },
+                    "experience": {
+                        "score": experience_score,
+                        "max": 25,
+                        "details": [f"Experience relevance score: {experience_score}/25"]
+                    },
+                    "skills": {
+                        "score": skills_score,
+                        "max": 25,
+                        "details": [f"Skills match score: {skills_score}/25"]
+                    },
+                    "education": {
+                        "score": education_score,
+                        "max": 10,
+                        "details": [f"Education section score: {education_score}/10"]
+                    },
+                    "format": {
+                        "score": format_score,
+                        "max": 10,
+                        "details": [f"Format and structure score: {format_score}/10"]
+                    }
+                },
+                "improvement_suggestions": suggestions,
+                "keyword_density": keyword_density
+            }
+            
+        except Exception as e:
+            st.error(f"Error in ATS scoring: {str(e)}")
+            return {
+                "total_score": 0,
+                "section_scores": {
+                    "keyword_match": {"score": 0, "max": 30, "details": ["Error analyzing keywords"]},
+                    "experience": {"score": 0, "max": 25, "details": ["Error analyzing experience"]},
+                    "skills": {"score": 0, "max": 25, "details": ["Error analyzing skills"]},
+                    "education": {"score": 0, "max": 10, "details": ["Error analyzing education"]},
+                    "format": {"score": 0, "max": 10, "details": ["Error analyzing format"]}
+                },
+                "improvement_suggestions": ["Unable to generate suggestions due to an error"],
+                "keyword_density": {}
+            }
 
 def main():
     st.set_page_config(layout="wide")  # Use wide layout for full screen
@@ -303,14 +629,20 @@ def main():
                     # Match skills
                     skill_matches = tailor.match_skills(resume_text, job_requirements)
                     
+                    # Calculate initial ATS score (before tailoring)
+                    initial_ats_score = tailor.calculate_ats_score(resume_text, job_requirements, skill_matches)
+                    
                     # Generate tailored resume with analysis
                     analysis_result = tailor.tailor_resume(resume_text, job_requirements, skill_matches)
+                    
+                    # Calculate final ATS score (after tailoring)
+                    final_ats_score = tailor.calculate_ats_score(analysis_result['tailored_resume'], job_requirements, skill_matches)
                     
                     # Generate cold email
                     cold_email = tailor.generate_cold_email(resume_text, job_requirements, skill_matches)
                     
                     # Create tabs for different sections
-                    tabs = st.tabs(["💡 Analysis", "📧 Cold Email", "📄 Resume Versions"])
+                    tabs = st.tabs(["💡 Analysis", "📊 ATS Score", "📧 Cold Email", "📄 Resume Versions"])
                     
                     # Analysis Tab
                     with tabs[0]:
@@ -341,13 +673,104 @@ def main():
                         for idx, keyword in enumerate(analysis_result['keyword_optimization'], 1):
                             st.write(f"{idx}. {keyword}")
                     
-                    # Cold Email Tab
+                    # ATS Score Tab
                     with tabs[1]:
+                        st.subheader("📊 ATS Score Analysis")
+                        
+                        # Display before and after scores side by side
+                        score_cols = st.columns(2)
+                        
+                        # Before Score
+                        with score_cols[0]:
+                            st.markdown("### Before Tailoring")
+                            initial_total = initial_ats_score["total_score"]
+                            st.markdown(f"""
+                                <div style='text-align: center;'>
+                                    <h1 style='color: {"#28a745" if initial_total >= 70 else "#ffc107" if initial_total >= 50 else "#dc3545"}; font-size: 4rem;'>
+                                        {initial_total}/100
+                                    </h1>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        # After Score
+                        with score_cols[1]:
+                            st.markdown("### After Tailoring")
+                            final_total = final_ats_score["total_score"]
+                            st.markdown(f"""
+                                <div style='text-align: center;'>
+                                    <h1 style='color: {"#28a745" if final_total >= 70 else "#ffc107" if final_total >= 50 else "#dc3545"}; font-size: 4rem;'>
+                                        {final_total}/100
+                                    </h1>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        # Display improvement percentage
+                        if initial_total > 0:  # Avoid division by zero
+                            improvement = ((final_total - initial_total) / initial_total) * 100
+                            st.markdown(f"""
+                                <div style='text-align: center; margin: 20px 0;'>
+                                    <h3 style='color: {"#28a745" if improvement > 0 else "#dc3545"}'>
+                                        {'+' if improvement > 0 else ''}{improvement:.1f}% Improvement
+                                    </h3>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        # Display section scores comparison
+                        st.subheader("Section Scores Comparison")
+                        for section, data in final_ats_score["section_scores"].items():
+                            st.write(f"**{section.replace('_', ' ').title()}**")
+                            cols = st.columns([3, 3, 1])
+                            
+                            # Before score
+                            with cols[0]:
+                                initial_progress = initial_ats_score["section_scores"][section]["score"] / data["max"]
+                                st.progress(initial_progress, text=f"Before: {initial_ats_score['section_scores'][section]['score']}/{data['max']}")
+                            
+                            # After score
+                            with cols[1]:
+                                final_progress = data["score"] / data["max"]
+                                st.progress(final_progress, text=f"After: {data['score']}/{data['max']}")
+                            
+                            # Details button
+                            with cols[2]:
+                                if st.button(f"Details 🔍", key=f"details_{section}"):
+                                    st.write("Before:", initial_ats_score["section_scores"][section]["details"])
+                                    st.write("After:", data["details"])
+                        
+                        # Display keyword density
+                        st.subheader("🔑 Keyword Density Comparison")
+                        density_cols = st.columns(2)
+                        
+                        with density_cols[0]:
+                            st.write("Before Tailoring")
+                            if initial_ats_score["keyword_density"]:
+                                initial_keywords_df = pd.DataFrame(
+                                    list(initial_ats_score["keyword_density"].items()),
+                                    columns=["Keyword", "Frequency"]
+                                ).sort_values(by="Frequency", ascending=False)
+                                st.dataframe(initial_keywords_df, use_container_width=True)
+                        
+                        with density_cols[1]:
+                            st.write("After Tailoring")
+                            if final_ats_score["keyword_density"]:
+                                final_keywords_df = pd.DataFrame(
+                                    list(final_ats_score["keyword_density"].items()),
+                                    columns=["Keyword", "Frequency"]
+                                ).sort_values(by="Frequency", ascending=False)
+                                st.dataframe(final_keywords_df, use_container_width=True)
+                        
+                        # Display improvement suggestions
+                        st.subheader("📈 Improvement Suggestions")
+                        for idx, suggestion in enumerate(final_ats_score["improvement_suggestions"], 1):
+                            st.write(f"{idx}. {suggestion}")
+                    
+                    # Cold Email Tab
+                    with tabs[2]:
                         st.subheader("📧 Cold Email Template")
                         st.text_area("Copy the email below:", cold_email, height=400)
                     
                     # Resume Versions Tab
-                    with tabs[2]:
+                    with tabs[3]:
                         st.subheader("📋 Compare Versions")
                         version_cols = st.columns(2)
                         with version_cols[0]:
