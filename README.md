@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # AI-Powered Resume Tailor
 
 An intelligent resume optimization system that enhances resumes for ATS (Applicant Tracking Systems) using advanced AI techniques. The system provides comprehensive analysis, scoring, and improvement suggestions to maximize your chances of getting past ATS filters.
@@ -254,4 +254,4 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 This project is licensed under the MIT License.
->>>>>>> 9eabb15095c3f0ea0257f89ae15a680fbb413336
+
