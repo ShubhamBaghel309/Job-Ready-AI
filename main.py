@@ -13,17 +13,6 @@ from typing import Dict, List, Optional
 from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import nltk
-import re
-
-# Download required NLTK data
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
 
 # Load environment variables
 load_dotenv()
@@ -34,9 +23,6 @@ class ResumeTailor:
         """Initialize the ResumeTailor with necessary components."""
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY not found in environment variables")
-        
-        # Setup NLTK data
-        self.setup_nltk()
             
         self.llm = ChatGroq(
             model="llama-3.1-70b-versatile",
@@ -47,55 +33,7 @@ class ResumeTailor:
             max_retries=2
         )
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.lemmatizer = WordNetLemmatizer()
-        self.stop_words = set(stopwords.words('english'))
-
-    def setup_nltk(self):
-        """Ensure all required NLTK data is downloaded."""
-        try:
-            # Create NLTK data directory if it doesn't exist
-            import os
-            nltk_data_dir = os.path.expanduser('~/nltk_data')
-            if not os.path.exists(nltk_data_dir):
-                os.makedirs(nltk_data_dir)
-            
-            # Download required NLTK data with explicit download directory
-            for resource in ['punkt', 'stopwords', 'wordnet']:
-                try:
-                    nltk.data.find(f'tokenizers/{resource}')
-                except LookupError:
-                    nltk.download(resource, download_dir=nltk_data_dir, quiet=True)
-        except Exception as e:
-            st.warning(f"NLTK setup warning: {str(e)}. Using basic tokenization as fallback.")
-            
-    def preprocess_text(self, text: str) -> str:
-        """Preprocess text for TF-IDF vectorization."""
-        try:
-            # Convert to lowercase
-            text = text.lower()
-            
-            # Remove special characters and numbers
-            text = re.sub(r'[^a-zA-Z\s]', ' ', text)
-            
-            try:
-                # Try NLTK tokenization
-                tokens = word_tokenize(text)
-            except:
-                # Fallback to basic splitting if NLTK fails
-                tokens = text.split()
-            
-            try:
-                # Try removing stopwords and lemmatizing
-                tokens = [self.lemmatizer.lemmatize(token) for token in tokens if token not in self.stop_words]
-            except:
-                # Fallback to just using tokens if lemmatization fails
-                tokens = [token for token in tokens if len(token) > 2]
-            
-            return ' '.join(tokens)
-        except Exception as e:
-            st.warning(f"Text preprocessing warning: {str(e)}. Using original text.")
-            return text
-
+        
     def extract_text_from_pdf(self, pdf_file) -> str:
         """Extract text content from a PDF file using PyPDF2."""
         pdf_reader = PdfReader(pdf_file)
@@ -454,105 +392,119 @@ class ResumeTailor:
         return str(response.content)
 
     def calculate_ats_score(self, resume_text: str, job_requirements: Dict, skill_matches: Dict) -> Dict:
-        """Calculate a comprehensive ATS score using TF-IDF and cosine similarity."""
+        """Calculate a comprehensive ATS score for the resume based on multiple factors."""
+        prompt = f"""You are an ATS (Applicant Tracking System) expert. Analyze the resume against the job requirements and calculate scores.
+
+        Rules for scoring:
+        1. All scores must be integers (whole numbers)
+        2. Each section score must not exceed its maximum value
+        3. Total score must be the sum of all section scores
+        4. Compare directly against job requirements
+        5. Higher scores for exact keyword matches from requirements
+
+        Scoring Criteria:
+        1. Keyword Match (30 points max):
+           - Award points for exact matches with job requirements
+           - Check keyword frequency and placement
+           - Required skills present: {job_requirements.get('skills', [])}
+           - Current matched skills: {skill_matches['matched_skills']}
+
+        2. Experience Alignment (25 points max):
+           - Compare against required experience: {job_requirements.get('experience', 'Not specified')}
+           - Check for relevant role titles
+           - Evaluate described responsibilities against: {job_requirements.get('responsibilities', [])}
+
+        3. Skills Match (25 points max):
+           - Technical skills alignment
+           - Soft skills presence
+           - Skills context and application
+
+        4. Education Relevance (10 points max):
+           - Required education level match
+           - Field of study relevance
+           - Certifications value
+
+        5. Format & Organization (10 points max):
+           - Standard section headers
+           - Bullet point structure
+           - Content readability
+
+        Resume to analyze:
+        {resume_text}
+
+        Job Requirements:
+        {json.dumps(job_requirements, indent=2)}
+
+        Return a JSON object with this exact structure:
+        {{
+            "total_score": <integer 0-100>,
+            "section_scores": {{
+                "keyword_match": {{
+                    "score": <integer 0-30>,
+                    "max": 30,
+                    "details": ["<specific keywords found>", "<specific keywords missing>"]
+                }},
+                "experience": {{
+                    "score": <integer 0-25>,
+                    "max": 25,
+                    "details": ["<specific experience matches>", "<experience gaps>"]
+                }},
+                "skills": {{
+                    "score": <integer 0-25>,
+                    "max": 25,
+                    "details": ["<matched skills details>", "<missing skills impact>"]
+                }},
+                "education": {{
+                    "score": <integer 0-10>,
+                    "max": 10,
+                    "details": ["<education alignment details>"]
+                }},
+                "format": {{
+                    "score": <integer 0-10>,
+                    "max": 10,
+                    "details": ["<format strengths>", "<format improvements needed>"]
+                }}
+            }},
+            "improvement_suggestions": [
+                "<actionable suggestion 1>",
+                "<actionable suggestion 2>",
+                "<actionable suggestion 3>"
+            ],
+            "keyword_density": {{
+                "<actual keyword from job requirements>": <integer frequency>
+            }}
+        }}
+        """
+
         try:
-            # Preprocess texts
-            processed_resume = self.preprocess_text(resume_text)
+            response = self.llm.invoke(prompt)
+            content = str(response.content).strip()
             
-            # Combine job requirements into a single text
-            job_text = f"{job_requirements.get('title', '')} "
-            job_text += f"{job_requirements.get('experience', '')} "
-            job_text += ' '.join(job_requirements.get('skills', []))
-            job_text += ' '.join(job_requirements.get('responsibilities', []))
-            processed_job = self.preprocess_text(job_text)
+            # More robust JSON extraction
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0]
+            content = content.strip()
             
-            # Create TF-IDF vectors
-            vectorizer = TfidfVectorizer()
-            tfidf_matrix = vectorizer.fit_transform([processed_job, processed_resume])
+            # Parse and validate the response
+            result = json.loads(content)
             
-            # Calculate cosine similarity
-            similarity_matrix = (tfidf_matrix * tfidf_matrix.T).toarray()
-            base_similarity_score = similarity_matrix[0][1]  # Similarity between job and resume
+            # Validate scores are integers and within range
+            result["total_score"] = int(result["total_score"])
+            for section, data in result["section_scores"].items():
+                data["score"] = int(data["score"])
+                if data["score"] < 0 or data["score"] > data["max"]:
+                    raise ValueError(f"Invalid score for {section}: {data['score']}")
             
-            # Calculate keyword density
-            feature_names = vectorizer.get_feature_names_out()
-            resume_vector = tfidf_matrix[1].toarray()[0]
-            keyword_density = {
-                word: int(freq * 100)  # Convert to percentage and round
-                for word, freq in zip(feature_names, resume_vector)
-                if freq > 0
-            }
+            # Validate total score matches sum of sections
+            expected_total = sum(data["score"] for data in result["section_scores"].values())
+            if result["total_score"] != expected_total:
+                result["total_score"] = expected_total
             
-            # Calculate section scores
-            total_matched_skills = len(skill_matches['matched_skills'])
-            total_required_skills = len(job_requirements.get('skills', []))
+            return result
             
-            # Keyword match score (30 points max)
-            keyword_score = int(30 * (base_similarity_score * 0.7 + (total_matched_skills / max(total_required_skills, 1)) * 0.3))
-            
-            # Experience score (25 points max)
-            experience_score = int(25 * base_similarity_score)
-            
-            # Skills match score (25 points max)
-            skills_score = int(25 * (total_matched_skills / max(total_required_skills, 1)))
-            
-            # Format score (10 points max) - Based on section headers and structure
-            format_indicators = ['experience', 'education', 'skills', 'summary', 'objective', 'projects']
-            format_score = sum(10 for indicator in format_indicators if indicator in processed_resume) // len(format_indicators)
-            
-            # Education score (10 points max) - Based on education section presence
-            education_score = 10 if 'education' in processed_resume.lower() else 5
-            
-            # Calculate total score
-            total_score = keyword_score + experience_score + skills_score + education_score + format_score
-            
-            # Prepare improvement suggestions based on scores
-            suggestions = []
-            if keyword_score < 20:
-                suggestions.append("Incorporate more key terms from the job description")
-            if experience_score < 15:
-                suggestions.append("Better align experience descriptions with job requirements")
-            if skills_score < 15:
-                suggestions.append("Add more relevant technical skills mentioned in the job posting")
-            if format_score < 7:
-                suggestions.append("Improve resume structure with clear section headers")
-            if education_score < 7:
-                suggestions.append("Enhance education section with relevant details")
-            
-            return {
-                "total_score": total_score,
-                "section_scores": {
-                    "keyword_match": {
-                        "score": keyword_score,
-                        "max": 30,
-                        "details": [f"Matched {total_matched_skills} out of {total_required_skills} required skills"]
-                    },
-                    "experience": {
-                        "score": experience_score,
-                        "max": 25,
-                        "details": [f"Experience relevance score: {experience_score}/25"]
-                    },
-                    "skills": {
-                        "score": skills_score,
-                        "max": 25,
-                        "details": [f"Skills match score: {skills_score}/25"]
-                    },
-                    "education": {
-                        "score": education_score,
-                        "max": 10,
-                        "details": [f"Education section score: {education_score}/10"]
-                    },
-                    "format": {
-                        "score": format_score,
-                        "max": 10,
-                        "details": [f"Format and structure score: {format_score}/10"]
-                    }
-                },
-                "improvement_suggestions": suggestions,
-                "keyword_density": keyword_density
-            }
-            
-        except Exception as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             st.error(f"Error in ATS scoring: {str(e)}")
             return {
                 "total_score": 0,
