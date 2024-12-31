@@ -40,4 +40,9 @@ Thumbs.db
 
 # Project specific
 tailored_resume.docx
-*.log 
+*.log
+Procfile
+setup.sh
+checkpoint.py
+original.py
+x.py 
