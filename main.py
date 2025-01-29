@@ -25,7 +25,7 @@ class ResumeTailor:
             raise ValueError("GROQ_API_KEY not found in environment variables")
             
         self.llm = ChatGroq(
-            model="llama-3.1-70b-versatile",
+            model="mixtral-8x7b-32768",
             groq_api_key=GROQ_API_KEY,
             temperature=0,
             max_tokens=None,
