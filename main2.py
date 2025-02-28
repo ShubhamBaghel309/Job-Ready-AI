@@ -16,7 +16,7 @@ import pandas as pd
 from resume_form import ResumeForm
 from resume_generator import ResumeGenerator
 from workflow_manager import WorkflowManager
-import latex
+# import latex
 # from email_template import EmailTemplate
 
 # Load environment variables

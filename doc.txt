@@ -1,0 +1,184 @@
+# Resume Tailor - Project Workflow Documentation
+
+## 1. Project Overview
+Resume Tailor is an AI-powered application that helps users optimize their resumes for Applicant Tracking Systems (ATS). The application provides comprehensive resume analysis, tailoring, and generates supporting documents for job applications.
+
+## 2. Core Components
+
+### 2.1 ResumeTailor Class
+The main class that handles all core functionalities:
+- Text extraction from documents
+- Job description parsing
+- Skill matching
+- Resume tailoring
+- Document generation
+- ATS scoring
+
+### 2.2 External Dependencies
+- **LLM Integration**: Uses Groq's LLM API for text generation and analysis
+- **Document Processing**: PyPDF2 for PDF and python-docx for DOCX files
+- **Text Analysis**: SentenceTransformer for semantic analysis
+- **Web Scraping**: WebBaseLoader for URL processing
+- **UI**: Streamlit for the web interface
+
+## 3. Workflow Process
+
+### 3.1 Input Processing
+1. **Resume Upload**
+   - Accepts PDF or DOCX formats
+   - Extracts text content using appropriate parser
+   - Maintains formatting structure
+
+2. **Job Description Input**
+   - Two methods:
+     - URL input (automatically scrapes content)
+     - Direct text paste
+   - Parses and structures job requirements
+
+### 3.2 Analysis Pipeline
+
+1. **Job Description Analysis**
+   ```python
+   parse_job_description()
+   ```
+   - Extracts key information:
+     - Required skills
+     - Experience requirements
+     - Job responsibilities
+     - Company details
+     - Job title
+
+2. **Skill Matching**
+   ```python
+   match_skills()
+   ```
+   - Two-pass matching system:
+     - Direct keyword matching with variations
+     - Semantic similarity matching
+   - Handles technical abbreviations and variations
+   - Returns matched and missing skills
+
+3. **ATS Scoring**
+   ```python
+   calculate_ats_score()
+   ```
+   - Scores components:
+     - Keyword Match (30 points)
+     - Experience Alignment (25 points)
+     - Skills Match (25 points)
+     - Education Relevance (10 points)
+     - Format & Organization (10 points)
+
+### 3.3 Document Generation
+
+1. **Resume Tailoring**
+   ```python
+   tailor_resume()
+   ```
+   - Optimizes resume based on:
+     - Job requirements
+     - ATS guidelines
+     - Keyword optimization
+     - Format improvement
+
+2. **Supporting Documents**
+   - **Cover Letter Generation**
+     ```python
+     generate_cover_letter()
+     ```
+     - Personalized based on job requirements
+     - Professional formatting
+     - Downloadable DOCX format
+
+   - **Cold Email Template**
+     ```python
+     generate_cold_email()
+     ```
+     - Concise and professional
+     - Highlights key matching skills
+     - Includes call to action
+
+### 3.4 User Interface Components
+
+1. **Input Section**
+   - Resume upload interface
+   - Job description input options
+   - Process initiation button
+
+2. **Results Tabs**
+   - **Analysis**
+     - Skills matching results
+     - Improvement suggestions
+     - Achievement analysis
+     - Keyword optimization
+
+   - **ATS Score**
+     - Before/After comparison
+     - Section-wise breakdown
+     - Improvement percentage
+     - Keyword density analysis
+
+   - **Cold Email**
+     - Generated email template
+     - Copyable format
+
+   - **Cover Letter**
+     - Professional cover letter
+     - Download option
+
+   - **Resume Versions**
+     - Original vs Tailored comparison
+     - Download options
+
+## 4. Technical Features
+
+### 4.1 Text Processing
+- Semantic similarity analysis
+- Keyword variation handling
+- Technical abbreviation mapping
+- Format preservation
+
+### 4.2 Optimization Techniques
+- Keyword density optimization (5-8%)
+- Format standardization
+- Section header optimization
+- Bullet point structure
+
+### 4.3 Error Handling
+- File format validation
+- API error management
+- JSON parsing error handling
+- Fallback mechanisms
+
+## 5. Output Formats
+- Tailored resume (DOCX)
+- Professional cover letter (DOCX)
+- Cold email template (Text)
+- Analysis reports (UI)
+- ATS scores (UI)
+
+## 6. Best Practices
+1. **Resume Optimization**
+   - Use standard section headers
+   - Include quantifiable achievements
+   - Maintain consistent formatting
+   - Optimize keyword placement
+
+2. **ATS Compatibility**
+   - Use full terms before abbreviations
+   - Avoid tables and graphics
+   - Use standard job titles
+   - Maintain optimal keyword density
+
+## 7. Future Enhancements
+1. Additional file format support
+2. Multiple resume comparison
+3. Industry-specific templates
+4. Enhanced semantic analysis
+5. Real-time editing capabilities
+
+## 8. Maintenance
+- Regular API key validation
+- Model updates
+- Dependency management
+- Error logging and monitoring

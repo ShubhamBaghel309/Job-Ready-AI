@@ -1,257 +1,183 @@
+# AI-Powered Resume Tailor 🎯
 
-# AI-Powered Resume Tailor
+An intelligent resume optimization tool that helps tailor your resume for specific job applications using AI. The application analyzes job descriptions, matches skills, and provides personalized improvements to increase your chances of getting through Applicant Tracking Systems (ATS).
 
-An intelligent resume optimization system that enhances resumes for ATS (Applicant Tracking Systems) using advanced AI techniques. The system provides comprehensive analysis, scoring, and improvement suggestions to maximize your chances of getting past ATS filters.
+## Features 🌟
 
-## Key Features
+- **Resume Analysis**: Comprehensive analysis of your resume against job requirements
+- **ATS Score Optimization**: Calculates and improves your resume's ATS compatibility score
+- **Skill Matching**: Identifies matched and missing skills from job requirements
+- **Smart Content Tailoring**: Optimizes resume content while maintaining authenticity
+- **Professional Documents**: Generates tailored resumes, cover letters, and cold emails
+- **PDF Generation**: Creates professionally formatted PDF resumes using a clean template
+- **Session Persistence**: Maintains all generated content throughout your session
 
-### 1. Resume Analysis & Optimization
-- PDF and DOCX file support
-- Intelligent text extraction and parsing
-- Job description analysis and requirement extraction
-- Smart skill matching with semantic understanding
-- ATS-optimized resume generation
-- Before/After comparison
+## Prerequisites 📋
 
-### 2. Advanced Skill Matching
-- Semantic similarity analysis
-- Technical term variation handling (e.g., "ML" ↔ "Machine Learning")
-- Context-aware skill detection
-- Explicit and implicit skill matching
-- Detailed skill gap analysis
+1. Python 3.7+
+2. wkhtmltopdf (for PDF generation)
+   - Windows: Download from https://wkhtmltopdf.org/downloads.html
+   - Mac: `brew install wkhtmltopdf`
+   - Linux: `sudo apt-get install wkhtmltopdf`
+3. Groq API key (sign up at https://console.groq.com)
 
-### 3. ATS Scoring System
-- Comprehensive scoring algorithm using TF-IDF and cosine similarity
-- Section-wise scoring breakdown:
-  - Keyword Match (30 points)
-  - Experience Alignment (25 points)
-  - Skills Match (25 points)
-  - Education Relevance (10 points)
-  - Format & Organization (10 points)
-- Before/After score comparison
-- Improvement percentage calculation
-
-### 4. Detailed Analytics
-- Skills gap analysis
-- Keyword density metrics
-- Section-by-section scoring
-- Quantifiable achievements extraction
-- Format and structure analysis
-
-### 5. Improvement Suggestions
-- Actionable improvement recommendations
-- Keyword optimization suggestions
-- Format enhancement tips
-- Section-specific improvements
-- Achievement emphasis guidance
-
-### 6. Professional Cold Email Generation
-- Context-aware email drafting
-- Skill-focused content
-- Professional formatting
-- Customized to job requirements
-- Call-to-action inclusion
-
-### 7. Document Management
-- Side-by-side version comparison
-- DOCX format export
-- Original resume preservation
-- Clean formatting maintenance
-- ATS-friendly output
-
-## Technical Features
-- Semantic text analysis using NLTK
-- TF-IDF vectorization for content comparison
-- Cosine similarity for matching accuracy
-- LLM integration via Groq
-- Streamlit-based interactive UI
-
-## Prerequisites
-
-- Python 3.8+
-- Groq API key (sign up at https://console.groq.com)
-- Required Python packages (see requirements.txt)
-
-## Installation
+## Installation 🚀
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/resume-tailor.git
+git clone <repository-url>
 cd resume-tailor
 ```
 
-2. Install dependencies:
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables:
-Create a `.env` file and add your Groq API key:
+4. Create a `.env` file in the root directory:
 ```
 GROQ_API_KEY=your_api_key_here
 ```
 
-## Usage
+## Usage 💡
 
-1. Run the Streamlit application:
+1. Start the Streamlit application:
 ```bash
 streamlit run main.py
 ```
 
-2. Upload your resume (PDF or DOCX format)
+2. Access the application at `http://localhost:8000`
 
-3. Provide job description (URL or text)
+3. Upload your resume (PDF/DOCX format)
 
-4. Click "Tailor Resume" to generate:
+4. Provide job description (URL or text)
+
+5. Click "Tailor Resume" to generate:
    - ATS Score Analysis
-   - Optimized Resume
+   - Skill Match Analysis
    - Improvement Suggestions
-   - Professional Cold Email
+   - Tailored Resume
+   - Cover Letter
+   - Cold Email
 
-## How It Works
+## Technical Details 🔧
+
+### Dependencies
+- `streamlit`: Web application framework
+- `langchain_groq`: LLM integration
+- `sentence_transformers`: Semantic text analysis
+- `beautifulsoup4`: HTML parsing
+- `PyPDF2`: PDF processing
+- `python-docx`: DOCX processing
+- `pdfkit`: PDF generation
+- See `requirements.txt` for complete list
+
+### Key Components
 
 1. **Resume Processing**:
    - Text extraction from PDF/DOCX
-   - Content normalization
-   - Structure analysis
+   - Section identification
+   - Content structuring
 
 2. **Job Analysis**:
+   - Web scraping (URL input)
+   - Text processing
    - Requirement extraction
    - Skill identification
-   - Experience mapping
 
 3. **Skill Matching**:
    - Direct keyword matching
    - Semantic similarity analysis
    - Technical variation handling
+   - Context-aware matching
 
-4. **ATS Scoring**:
-   - TF-IDF vectorization
-   - Cosine similarity calculation
-   - Multi-factor scoring
+4. **Content Generation**:
+   - Resume optimization
+   - Cover letter generation
+   - Cold email creation
+   - PDF formatting
 
-5. **Resume Optimization**:
-   - Keyword integration
-   - Format enhancement
-   - Content restructuring
+5. **ATS Scoring**:
+   - Keyword analysis
+   - Format checking
+   - Content relevance
+   - Section scoring
 
-6. **Output Generation**:
-   - DOCX file creation
-   - Cold email drafting
-   - Analysis report compilation
+### File Structure
+```
+resume-tailor/
+├── main.py              # Main application code
+├── requirements.txt     # Python dependencies
+├── template.html        # Resume template
+├── .env                # Environment variables
+└── README.md           # Documentation
+```
 
-## Security
+## Best Practices 📝
 
-- Groq API key is handled securely
-- No data storage on servers
-- Local file processing only
-- Secure document handling
+1. **Resume Format**:
+   - Use standard section headers
+   - Include quantifiable achievements
+   - Maintain consistent formatting
+   - Use industry-standard terminology
 
-## License
+2. **Job Description**:
+   - Provide complete job descriptions
+   - Include all requirements
+   - Specify technical skills clearly
 
-MIT License 
-=======
-# Resume Tailor
-## Overview
-This project provides an AI-powered tool to optimize resumes  and boost resume score for surpassing Applicant Tracking Systems (ATS) using advanced language models. It allows users to upload their resumes and job descriptions, tailoring the resume to better match job requirements. 
+3. **PDF Generation**:
+   - Ensure wkhtmltopdf is properly installed
+   - Keep template formatting clean
+   - Verify PDF output quality
 
-## Features
-- **Resume Upload**: Supports PDF and DOCX formats.
-- **Job Description Input**: Users can input job descriptions via URL or text.
-- **Skill Matching**: Matches resume skills with job requirements using semantic similarity.
-- **Tailored Resume Generation**: Generates a resume that emphasizes relevant skills and achievements.
-- **Cold Email Generation**: Creates a professional email template for job applications.
-- **Improvements Analysis**: Provides detailed analysis of how the resume aligns with job requirements and suggests specific improvements.
-- **Downloadable Resume**: Allows users to download the tailored resume in DOCX format.
+## Troubleshooting 🔍
 
-## Requirements
-- Python 3.7+
-- Streamlit
-- Langchain
-- PyPDF2
-- Sentence Transformers
-- python-dotenv
+1. **PDF Generation Issues**:
+   - Verify wkhtmltopdf installation
+   - Check system PATH configuration
+   - Ensure template.html exists
 
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/ShubhamBaghel309/TailorAI.git
-   ```
+2. **API Errors**:
+   - Verify Groq API key in .env
+   - Check internet connection
+   - Monitor API rate limits
 
-2. Install the required packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
+3. **Content Processing**:
+   - Use supported file formats
+   - Keep file sizes under 5MB
+   - Ensure clean formatting
 
-3. Set up environment variables:
-   - Create a `.env` file in the root directory and add your `GROQ_API_KEY`:
-     ```
-     GROQ_API_KEY=your_api_key_here
-     ```
+## Contributing 🤝
 
-# Workflow for AI-Powered Resume Tailor
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## Overview
-This document outlines the workflow for using the AI-Powered Resume Tailor application, detailing the steps from uploading a resume to generating a tailored document and cold email.
+## License 📄
 
-## Workflow Steps
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-1. **Start the Application**
-   - Run the application using Streamlit:
-     ```bash
-     streamlit run main.py
-     ```
+## Acknowledgments 🙏
 
-2. **Upload Resume**
-   - Navigate to the "Upload Resume & Job Details" section.
-   - Click on the file uploader to upload your resume in either PDF or DOCX format.
+- Groq for LLM API
+- Streamlit for the web framework
+- wkhtmltopdf for PDF generation
+- All open-source contributors
 
-3. **Input Job Description**
-   - Choose how to input the job description:
-     - **Enter URL**: Input the URL of the job posting.
-     - **Paste Description**: Paste the job description directly into the text area.
+## Contact 📧
 
-4. **Process Resume and Job Description**
-   - Ensure both the resume and job description are provided.
-   - Click the "Tailor Resume" button to initiate processing.
-   - The application will:
-     - Extract text from the uploaded resume.
-     - Parse the job description to identify key requirements.
-     - Match skills from the resume with the job requirements.
+For support or queries, please open an issue in the repository.
 
-5. **Receive Tailored Resume and Analysis**
-   - The application will generate:
-     - A tailored resume that emphasizes relevant skills and achievements.
-     - An analysis of how the resume aligns with the job requirements, including:
-       - Matched skills
-       - Missing skills and suggestions for improvement
-       - Quantifiable achievements to highlight
-       - Keywords for ATS optimization
-
-6. **Generate Cold Email**
-   - A professional cold email template will be created based on the resume and job requirements.
-   - The email will include:
-     - Key matching skills
-     - References to specific job requirements
-     - A brief mention of relevant achievements
-     - A call to action
-
-7. **Review and Download**
-   - Navigate through the tabs to review:
-     - Skills Analysis
-     - Cold Email Template
-     - Comparison of Original and Tailored Resume
-   - Download the tailored resume in DOCX format by clicking the download button.
-
-8. **End of Workflow**
-   - After reviewing and downloading, the user can close the application.
-
-## Conclusion
-This workflow provides a structured approach to using the AI-Powered Resume Tailor, ensuring users can effectively optimize their resumes and generate professional communication for job applications.
-
-## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
-
-## License
-This project is licensed under the MIT License.
+---
+Made with ❤️ using AI and Python
 
