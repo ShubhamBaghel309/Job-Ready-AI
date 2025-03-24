@@ -614,7 +614,7 @@ class AppNavigation:
         """Display the landing page with workflow options."""
         st.markdown("""
             <h1 style='text-align: center; color: #1E88E5; padding: 1rem;'>
-                🎯 AI-Powered Resume Builder & Tailor
+                🎯 Job Ready AI
             </h1>
             <p style='text-align: center; color: #666; margin-bottom: 2rem;'>
                 Create or optimize your resume with AI assistance
@@ -649,7 +649,7 @@ def render_landing_page():
     """Render the landing page with workflow options."""
     st.markdown("""
         <h1 style='text-align: center; color: #1E88E5; padding: 1rem;'>
-            🎯 AI-Powered Resume Builder & Tailor
+            🎯 Job Ready AI 
         </h1>
             Create or optimize your resume with AI assistance
         </p>
@@ -944,626 +944,126 @@ def validate_ats_score(score_data: Dict) -> Dict:
         return score_data
 
 def show_ats_score_tab(initial_ats_score, final_ats_score):
-    """Display the ATS score tab content with high contrast."""
-    try:
-        # Validate scores
-        initial_ats_score = validate_ats_score(initial_ats_score)
-        final_ats_score = validate_ats_score(final_ats_score)
-        
-        # Container for better spacing and contrast
-        with st.container():
-            st.markdown("""
-                <div style='background-color: #ffffff; padding: 20px; border-radius: 10px; border: 2px solid #000000;'>
-                    <h2 style='text-align: center; color: #000000; margin-bottom: 30px;'>ATS Score Analysis</h2>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Display scores side by side
-            col1, col2 = st.columns(2)
-            
-            # Before Score
-            with col1:
-                initial_total = initial_ats_score["total_score"]
-                score_text = "Needs Improvement"
-                text_color = "#800000"  # Dark red for contrast
-                if initial_total >= 70:
-                    score_text = "Excellent"
-                    text_color = "#006400"  # Dark green
-                elif initial_total >= 50:
-                    score_text = "Good"
-                    text_color = "#000000"  # Black
-                
-                st.markdown(
-                    f"""
-                    <div style='text-align: center; padding: 20px; border: 2px solid #000000; border-radius: 10px; background-color: #ffffff;'>
-                        <h3 style='color: #000000; margin-bottom: 10px; font-weight: bold;'>Original Score</h3>
-                        <div style='font-size: 48px; margin: 20px 0; font-weight: bold; color: {text_color};'>{initial_total}</div>
-                        <p style='color: {text_color}; font-size: 18px; font-weight: bold;'>{score_text}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            
-            # After Score
-            with col2:
-                final_total = final_ats_score["total_score"]
-                score_text = "Needs Improvement"
-                text_color = "#800000"  # Dark red for contrast
-                if final_total >= 70:
-                    score_text = "Excellent"
-                    text_color = "#006400"  # Dark green
-                elif final_total >= 50:
-                    score_text = "Good"
-                    text_color = "#000000"  # Black
-                
-                st.markdown(
-                    f"""
-                    <div style='text-align: center; padding: 20px; border: 2px solid #000000; border-radius: 10px; background-color: #ffffff;'>
-                        <h3 style='color: #000000; margin-bottom: 10px; font-weight: bold;'>Optimized Score</h3>
-                        <div style='font-size: 48px; margin: 20px 0; font-weight: bold; color: {text_color};'>{final_total}</div>
-                        <p style='color: {text_color}; font-size: 18px; font-weight: bold;'>{score_text}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            
-            # Improvement percentage with better contrast
-            if initial_total > 0:
-                improvement = ((final_total - initial_total) / initial_total) * 100
-                improvement_color = "#006400" if improvement > 0 else "#800000"
-                st.markdown(
-                    f"""
-                    <div style='text-align: center; margin: 30px 0; padding: 15px; background-color: #ffffff; border: 2px solid #000000; border-radius: 10px;'>
-                        <h3 style='color: {improvement_color}; font-size: 24px; font-weight: bold;'>
-                            Overall Improvement: {'+' if improvement > 0 else ''}{improvement:.1f}%
-                        </h3>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            
-            # Section Scores with better contrast
-            st.markdown("""
-                <div style='margin: 30px 0;'>
-                    <h3 style='color: #000000; font-weight: bold; margin-bottom: 20px;'>Detailed Section Analysis</h3>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Display each section score
-            for section, data in final_ats_score["section_scores"].items():
-                section_name = section.replace('_', ' ').title()
-                initial_score = initial_ats_score["section_scores"][section]["score"]
-                final_score = data["score"]
-                max_score = data["max"]
-                
-                st.markdown(
-                    f"""
-                    <div style='background-color: #ffffff; padding: 15px; border: 1px solid #000000; border-radius: 5px; margin-bottom: 15px;'>
-                        <h4 style='color: #000000; margin-bottom: 15px; font-weight: bold;'>{section_name}</h4>
-                    """,
-                    unsafe_allow_html=True
-                )
-                
-                cols = st.columns([4, 4, 2])
-                
-                # Before score
-                with cols[0]:
-                    initial_percent = (initial_score / max_score) * 100
-                    st.markdown(
-                        f"""
-                        <div style='padding: 10px; border: 1px solid #000000; border-radius: 5px;'>
-                            <p style='color: #000000; margin-bottom: 5px; font-weight: bold;'>Before: {initial_score}/{max_score}</p>
-                            <div style='background-color: #e0e0e0; height: 10px; border-radius: 5px;'>
-                                <div style='background-color: #000000; width: {initial_percent}%; height: 100%; border-radius: 5px;'></div>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                
-                # After score
-                with cols[1]:
-                    final_percent = (final_score / max_score) * 100
-                    st.markdown(
-                        f"""
-                        <div style='padding: 10px; border: 1px solid #000000; border-radius: 5px;'>
-                            <p style='color: #000000; margin-bottom: 5px; font-weight: bold;'>After: {final_score}/{max_score}</p>
-                            <div style='background-color: #e0e0e0; height: 10px; border-radius: 5px;'>
-                                <div style='background-color: #000000; width: {final_percent}%; height: 100%; border-radius: 5px;'></div>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                
-                # Details button
-                with cols[2]:
-                    if st.button("👉 Details", key=f"details_{section}"):
-                        st.markdown("""
-                            <div style='background-color: #ffffff; padding: 15px; border: 1px solid #000000; border-radius: 5px; margin-top: 10px;'>
-                        """, unsafe_allow_html=True)
-                        st.markdown("**Before:**")
-                        for detail in initial_ats_score["section_scores"][section]["details"]:
-                            st.markdown(f"• {detail}")
-                        st.markdown("**After:**")
-                        for detail in data["details"]:
-                            st.markdown(f"• {detail}")
-                        st.markdown("</div>", unsafe_allow_html=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Keyword Density Analysis with better contrast
-            st.markdown("""
-                <div style='margin: 30px 0;'>
-                    <h3 style='color: #000000; font-weight: bold;'>Keyword Density Comparison</h3>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            density_cols = st.columns(2)
-            
-            with density_cols[0]:
-                st.markdown("<p style='color: #000000; font-weight: bold;'>Before Optimization</p>", unsafe_allow_html=True)
-                if initial_ats_score["keyword_density"]:
-                    df = pd.DataFrame(
-                        list(initial_ats_score["keyword_density"].items()),
-                        columns=["Keyword", "Frequency"]
-                    ).sort_values(by="Frequency", ascending=False)
-                    st.dataframe(
-                        df,
-                        hide_index=True,
-                        use_container_width=True
-                    )
-            
-            with density_cols[1]:
-                st.markdown("<p style='color: #000000; font-weight: bold;'>After Optimization</p>", unsafe_allow_html=True)
-                if final_ats_score["keyword_density"]:
-                    df = pd.DataFrame(
-                        list(final_ats_score["keyword_density"].items()),
-                        columns=["Keyword", "Frequency"]
-                    ).sort_values(by="Frequency", ascending=False)
-                    st.dataframe(
-                        df,
-                        hide_index=True,
-                        use_container_width=True
-                    )
-            
-            # Improvement Suggestions with better contrast
-            st.markdown("""
-                <div style='margin: 30px 0;'>
-                    <h3 style='color: #000000; font-weight: bold;'>Improvement Suggestions</h3>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            for idx, suggestion in enumerate(final_ats_score["improvement_suggestions"], 1):
-                st.markdown(
-                    f"""
-                    <div style='background-color: #ffffff; padding: 15px; border: 1px solid #000000; border-radius: 5px; margin-bottom: 10px;'>
-                        <p style='color: #000000; margin: 0; font-weight: 500;'>{idx}. {suggestion}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                
-    except Exception as e:
-        st.error(f"Error displaying ATS score: {str(e)}")
-        st.markdown(
-            """
-            <div style='background-color: #ffffff; padding: 15px; border: 2px solid #800000; border-radius: 5px;'>
-                <p style='color: #800000; margin: 0; font-weight: bold;'>Unable to display ATS score analysis. Please try again.</p>
+    """Display the ATS score tab content."""
+    # Validate scores
+    initial_ats_score = validate_ats_score(initial_ats_score)
+    final_ats_score = validate_ats_score(final_ats_score)
+    
+    st.subheader("📊 ATS Score Analysis")
+    
+    # Display before and after scores side by side
+    score_cols = st.columns(2)
+    
+    # Before Score
+    with score_cols[0]:
+        st.markdown("### Before Tailoring")
+        initial_total = initial_ats_score["total_score"]
+        st.markdown(f"""
+            <div style='text-align: center;'>
+                <h1 style='color: {"#28a745" if initial_total >= 70 else "#ffc107" if initial_total >= 50 else "#dc3545"}; font-size: 4rem;'>
+                    {initial_total}/100
+                </h1>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """, unsafe_allow_html=True)
+    
+    # After Score
+    with score_cols[1]:
+        st.markdown("### After Tailoring")
+        final_total = final_ats_score["total_score"]
+        st.markdown(f"""
+            <div style='text-align: center;'>
+                <h1 style='color: {"#28a745" if final_total >= 70 else "#ffc107" if final_total >= 50 else "#dc3545"}; font-size: 4rem;'>
+                    {final_total}/100
+                </h1>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Display improvement percentage
+    if initial_total > 0:  # Avoid division by zero
+        improvement = ((final_total - initial_total) / initial_total) * 100
+        st.markdown(f"""
+            <div style='text-align: center; margin: 20px 0;'>
+                <h3 style='color: {"#28a745" if improvement > 0 else "#dc3545"}'>
+                    {'+' if improvement > 0 else ''}{improvement:.1f}% Improvement
+                </h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Display section scores comparison
+    st.subheader("Section Scores Comparison")
+    for section, data in final_ats_score["section_scores"].items():
+        st.write(f"**{section.replace('_', ' ').title()}**")
+        cols = st.columns([3, 3, 1])
+        
+        # Before score
+        with cols[0]:
+            initial_progress = initial_ats_score["section_scores"][section]["score"] / data["max"]
+            st.progress(initial_progress, text=f"Before: {initial_ats_score['section_scores'][section]['score']}/{data['max']}")
+        
+        # After score
+        with cols[1]:
+            final_progress = data["score"] / data["max"]
+            st.progress(final_progress, text=f"After: {data['score']}/{data['max']}")
+        
+        # Details button
+        with cols[2]:
+            if st.button(f"Details 🔍", key=f"details_{section}"):
+                st.write("Before:", initial_ats_score["section_scores"][section]["details"])
+                st.write("After:", data["details"])
+    
+    # Display keyword density
+    st.subheader("🔑 Keyword Density Comparison")
+    density_cols = st.columns(2)
+    
+    with density_cols[0]:
+        st.write("Before Tailoring")
+        if initial_ats_score["keyword_density"]:
+            initial_keywords_df = pd.DataFrame(
+                list(initial_ats_score["keyword_density"].items()),
+                columns=["Keyword", "Frequency"]
+            ).sort_values(by="Frequency", ascending=False)
+            st.dataframe(initial_keywords_df, use_container_width=True)
+    
+    with density_cols[1]:
+        st.write("After Tailoring")
+        if final_ats_score["keyword_density"]:
+            final_keywords_df = pd.DataFrame(
+                list(final_ats_score["keyword_density"].items()),
+                columns=["Keyword", "Frequency"]
+            ).sort_values(by="Frequency", ascending=False)
+            st.dataframe(final_keywords_df, use_container_width=True)
+    
+    # Display improvement suggestions
+    st.subheader("📈 Improvement Suggestions")
+    for idx, suggestion in enumerate(final_ats_score["improvement_suggestions"], 1):
+        st.write(f"{idx}. {suggestion}")
 
 def show_resume_versions_tab(resume_text, analysis_result, tailor):
-    """Display the resume versions tab content with professional template options."""
-    # Store resume data in session state if not already stored
-    if 'generated_resume_data' not in st.session_state:
-        try:
-            # Extract resume sections from optimized content
-            optimized_content = analysis_result['tailored_resume'].split("Here's the optimized resume:")[-1].strip() if "Here's the optimized resume:" in analysis_result['tailored_resume'] else analysis_result['tailored_resume']
-            sections = parse_resume_sections(optimized_content)
-            
-            # Store data in session state
-            st.session_state.generated_resume_data = {
-                'original_text': resume_text,
-                'optimized_content': optimized_content,
-                'sections': sections,
-                'html_content': None,
-                'pdf_content': None,
-                'doc': None
-            }
-            
-            # Initialize ResumeGenerator
-            generator = ResumeGenerator()
-            
-            # Generate formatted resume using template
-            resume_data = {
-                'personal_info': sections['personal_info'],
-                'education': sections['education'],
-                'experience': sections['experience'],
-                'skills': sections['skills'],
-                'certifications': sections.get('certifications', [])
-            }
-            
-            # Generate different formats and store them
-            st.session_state.generated_resume_data['html_content'] = generator.render_html(resume_data)
-            st.session_state.generated_resume_data['pdf_content'] = generator.generate_pdf(st.session_state.generated_resume_data['html_content'])
-            st.session_state.generated_resume_data['doc'] = generator.generate_docx(resume_data)
-        
-        except KeyError as e:
-            st.error(f"Missing key in resume data: {e}")
-        except AttributeError as e:
-            st.error(f"Unexpected data format: {e}")
-        except Exception as e:
-            st.error(f"An error occurred while generating resume versions: {e}")
-
-            
-    # Display the content
+    """Display the resume versions tab content."""
     version_cols = st.columns(2)
     
     with version_cols[0]:
         st.markdown("#### Original Resume")
-        st.text_area("", st.session_state.generated_resume_data['original_text'], height=400, disabled=True)
+        st.text_area("", resume_text, height=400, disabled=True)
     
     with version_cols[1]:
         st.markdown("#### Optimized Resume")
-        st.text_area("", st.session_state.generated_resume_data['optimized_content'], height=400, disabled=True)
+        # Extract only the resume content without LLM conversation
+        optimized_content = analysis_result['tailored_resume'].split("Here's the optimized resume:")[-1].strip() if "Here's the optimized resume:" in analysis_result['tailored_resume'] else analysis_result['tailored_resume']
+        st.text_area("", optimized_content, height=400, disabled=True)
     
-    # Add professional template generation
-    st.markdown("---")
-    st.markdown("### Download Professional Resume")
+    # Download button
+    doc = tailor.generate_docx(optimized_content)
+    doc.save("tailored_resume.docx")
     
-    try:
-        # Show preview with improved styling
-        st.markdown("#### Preview")
-        st.markdown("""
-            <div style='padding: 20px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px;'>
-        """, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Error displaying preview: {str(e)}")
-        st.components.v1.html(
-            f"""
-            <div style="background-color: white; padding: 20px;">
-                {st.session_state.generated_resume_data['html_content']}
-            </div>
-            """,
-            height=800,
-            scrolling=True
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Download options
-        st.markdown("#### Download Options")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.download_button(
-                label="⬇️ Download PDF Version",
-                data=st.session_state.generated_resume_data['pdf_content'],
-                file_name="tailored_resume.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        
-        with col2:
-            st.download_button(
-                label="⬇️ Download HTML Version",
-                data=st.session_state.generated_resume_data['html_content'],
-                file_name="tailored_resume.html",
-                mime="text/html",
-                use_container_width=True
-            )
-        
-        with col3:
-            # Save DOCX temporarily and read it back
-            temp_docx = "tailored_resume.docx"
-            st.session_state.generated_resume_data['doc'].save(temp_docx)
-            with open(temp_docx, "rb") as file:
-                docx_data = file.read()
-            os.remove(temp_docx)  # Clean up the temporary file
-            
-            st.download_button(
-                label="⬇️ Download Word Version",
-                data=docx_data,
-                file_name="tailored_resume.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
-            
-    except Exception as e:
-        st.error(f"Error displaying resume: {str(e)}")
-        st.info("Falling back to basic format...")
-        # Fallback to basic DOCX
-        doc = tailor.generate_docx(st.session_state.generated_resume_data['optimized_content'])
-        temp_docx = "tailored_resume.docx"
-        doc.save(temp_docx)
-        with open(temp_docx, "rb") as file:
-            docx_data = file.read()
-        os.remove(temp_docx)
-        
+    with open("tailored_resume.docx", "rb") as file:
         st.download_button(
-            label="⬇️ Download Basic Resume",
-            data=docx_data,
+            label="⬇️ Download Optimized Resume",
+            data=file,
             file_name="tailored_resume.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             use_container_width=True
         )
-
-def parse_resume_sections(content: str) -> Dict:
-    """Parse the optimized resume content into structured sections."""
-    try:
-        sections = {
-            'personal_info': {
-                'full_name': '',
-                'email': '',
-                'phone': '',
-                'location': '',
-                'linkedin': '',
-                'summary': ''
-            },
-            'education': [],
-            'experience': [],
-            'skills': {
-                'technical': [],
-                'soft': []
-            },
-            'certifications': []
-        }
-        
-        # Split content into sections
-        lines = content.split('\n')
-        current_section = None
-        temp_experience = {}
-        
-        for idx, line in enumerate(lines):
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Extract personal info from first few lines
-            if idx < 5:
-                if '@' in line:
-                    sections['personal_info']['email'] = line
-                elif any(x.isdigit() for x in line):
-                    sections['personal_info']['phone'] = line
-                elif 'linkedin.com' in line.lower():
-                    sections['personal_info']['linkedin'] = line
-                else:
-                    if not sections['personal_info']['full_name']:
-                        sections['personal_info']['full_name'] = line
-                    elif not sections['personal_info']['location']:
-                        sections['personal_info']['location'] = line
-            
-            # Detect sections
-            lower_line = line.lower()
-            if 'summary' in lower_line or 'profile' in lower_line or 'objective' in lower_line:
-                current_section = 'summary'
-                continue
-            elif 'education' in lower_line and len(line) < 20:
-                current_section = 'education'
-                sections['education'] = []
-                continue
-            elif 'experience' in lower_line and len(line) < 20:
-                current_section = 'experience'
-                sections['experience'] = []
-                temp_experience = {}
-                continue
-            elif 'skills' in lower_line and len(line) < 20:
-                current_section = 'skills'
-                continue
-            elif 'certification' in lower_line and len(line) < 20:
-                current_section = 'certifications'
-                continue
-            
-            # Process section content
-            if current_section == 'summary':
-                if not any(keyword in lower_line for keyword in ['education', 'experience', 'skills', 'certification']):
-                    sections['personal_info']['summary'] += f"{line} "
-            
-            elif current_section == 'education':
-                if line:
-                    edu_entry = {
-                        'degree': line,
-                        'institution': '',
-                        'start_year': '',
-                        'end_year': ''
-                    }
-                    # Try to extract years
-                    years = [word for word in line.split() if word.isdigit() and len(word) == 4]
-                    if len(years) >= 2:
-                        edu_entry['start_year'] = years[0]
-                        edu_entry['end_year'] = years[1]
-                    # Extract institution
-                    if ',' in line:
-                        parts = line.split(',')
-                        edu_entry['institution'] = parts[0].strip()
-                        edu_entry['degree'] = parts[1].strip()
-                    sections['education'].append(edu_entry)
-            
-            elif current_section == 'experience':
-                if line.strip():
-                    if line.startswith('•') or line.startswith('-'):
-                        if 'responsibilities' not in temp_experience:
-                            temp_experience['responsibilities'] = []
-                        temp_experience['responsibilities'].append(line.lstrip('•- ').strip())
-                    else:
-                        if temp_experience and 'title' in temp_experience:
-                            sections['experience'].append(temp_experience)
-                            temp_experience = {}
-                        
-                        # New experience entry
-                        title_parts = line.split(',')
-                        temp_experience['title'] = title_parts[0].strip()
-                        if len(title_parts) > 1:
-                            temp_experience['company'] = title_parts[1].strip()
-                        
-                        # Try to extract dates
-                        date_parts = [part for part in line.split() if '-' in part or 'present' in part.lower()]
-                        if date_parts:
-                            dates = date_parts[0].split('-')
-                            temp_experience['start_date'] = dates[0].strip()
-                            temp_experience['end_date'] = dates[1].strip() if len(dates) > 1 else 'Present'
-            
-            elif current_section == 'skills':
-                if 'technical' in lower_line:
-                    sections['skills']['technical'] = [s.strip() for s in line.split(':')[1].split(',') if s.strip()]
-                elif 'soft' in lower_line:
-                    sections['skills']['soft'] = [s.strip() for s in line.split(':')[1].split(',') if s.strip()]
-                elif line:
-                    if not sections['skills']['technical']:
-                        sections['skills']['technical'] = [s.strip() for s in line.split(',') if s.strip()]
-            
-            elif current_section == 'certifications':
-                if line:
-                    cert_parts = line.split(',')
-                    cert_entry = {
-                        'name': cert_parts[0].strip(),
-                        'issuer': cert_parts[1].strip() if len(cert_parts) > 1 else '',
-                        'year': cert_parts[2].strip() if len(cert_parts) > 2 else ''
-                    }
-                    sections['certifications'].append(cert_entry)
-        
-        # Add last experience entry if exists
-        if temp_experience and 'title' in temp_experience:
-            sections['experience'].append(temp_experience)
-        
-        return sections
-    
-    except Exception as e:
-        st.error(f"Error parsing resume sections: {str(e)}")
-        return {
-            'personal_info': {
-                'full_name': 'Name not found',
-                'email': 'Email not found',
-                'phone': 'Phone not found',
-                'location': 'Location not found',
-                'linkedin': '',
-                'summary': 'Summary not found'
-            },
-            'education': [],
-            'experience': [],
-            'skills': {'technical': [], 'soft': []},
-            'certifications': []
-        }
-
-def load_css():
-    """Load custom CSS styles with high contrast black and white theme."""
-    st.markdown("""
-        <style>
-        /* Global Styles */
-        [data-testid="stAppViewContainer"] {
-            background: #ffffff;
-        }
-        
-        /* Text Colors */
-        h1, h2, h3, p, span, div, label, text {
-            color: #000000 !important;
-            font-family: 'Arial', sans-serif;
-        }
-        
-        /* Buttons */
-        div.stButton > button {
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-        
-        /* Input Fields */
-        div.stTextInput > div > div > input,
-        div.stTextArea > div > textarea {
-            color: #000000;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-        }
-        
-        /* Progress Bars */
-        div.stProgress > div > div {
-            background-color: #000000;
-        }
-        
-        /* Cards and Sections */
-        .css-1y4p8pa {
-            background: #ffffff;
-            border: 1px solid #000000;
-            padding: 1rem;
-        }
-        
-        /* Tabs */
-        .stTabs [data-baseweb="tab"] {
-            color: #000000;
-        }
-        
-        .stTabs [aria-selected="true"] {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-        }
-        
-        /* Info Messages */
-        .stInfo {
-            color: #000000;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-        }
-        
-        /* Error Messages */
-        .stError {
-            color: #800000;
-            background-color: #ffffff;
-            border: 1px solid #800000;
-        }
-        
-        /* Success Messages */
-        .stSuccess {
-            color: #004d00;
-            background-color: #ffffff;
-            border: 1px solid #004d00;
-        }
-        
-        /* Tables and Dataframes */
-        .dataframe {
-            color: #000000;
-        }
-        
-        /* Text Areas */
-        .stTextArea textarea {
-            color: #000000;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-        }
-        
-        /* Links */
-        a {
-            color: #000000;
-            text-decoration: underline;
-        }
-        
-        /* Radio Buttons */
-        .stRadio label {
-            color: #000000;
-        }
-        
-        /* Expandable Sections */
-        .streamlit-expanderHeader {
-            color: #000000;
-            background-color: #ffffff;
-        }
-        
-        /* Preview iframe styling */
-        iframe {
-            background-color: white !important;
-            padding: 20px !important;
-        }
-        
-        /* Set dark text color for all text elements */
-        .stMarkdown, .stText {
-            color: #000000 !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
 def main():
     st.set_page_config(layout="wide", page_title="AI Resume Builder & Tailor")
@@ -1599,10 +1099,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
 
 
 
