@@ -1,4 +1,4 @@
-# 🎯 RESUMETAILOR - AI-Powered Resume Builder & Optimizer
+# 🎯 Job Ready AI - AI-Powered Resume Builder & Optimizer
 
 RESUMETAILOR is a comprehensive AI-powered application designed to create, customize, and optimize resumes for specific job positions. Leveraging advanced natural language processing and machine learning techniques, the tool helps job seekers maximize their chances of success by tailoring their resumes to pass Applicant Tracking Systems (ATS) and appeal to hiring managers.
 
