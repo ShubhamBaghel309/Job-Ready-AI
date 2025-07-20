@@ -29,7 +29,7 @@ class ResumeTailor:
             raise ValueError("GROQ_API_KEY not found in environment variables")
             
         self.llm = ChatGroq(
-            model="qwen-2.5-32b",
+            model="llama-3.1-8b-instant",
             groq_api_key=GROQ_API_KEY,
             temperature=0,
             max_tokens=None,
@@ -262,7 +262,8 @@ class ResumeTailor:
         Resume Context:
         {resume_text}
 
-        Generate a complete cover letter following the exact format above. Keep it concise and focused on key achievements and relevant skills.
+        Generate a complete cover letter following the exact format above. Keep it concise and focused on key achievements and relevant skills. Also response should not contain '*' and also
+        make it fully personalised by taking all the relevant information from resume like name,address, also autofill the company name and address according to your knowledge.
         """
         
         response = self.llm.invoke(prompt)
