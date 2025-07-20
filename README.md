@@ -24,7 +24,7 @@
    - Add your API keys (e.g., GROQ_API_KEY) to a `.env` file.
 4. **Run the app:**
    ```sh
-   streamlit run main2.py
+   streamlit run main.py
    ```
 
 ## Usage
