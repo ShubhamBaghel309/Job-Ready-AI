@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import WebBaseLoader
-# from langchain.document_loaders import WebBaseLoader
+from langchain.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from bs4 import BeautifulSoup
 import requests
@@ -319,6 +319,7 @@ class ResumeTailor:
         
         Return ONLY the optimized resume text. Ensure EVERY required skill and responsibility is addressed.
         """
+        
         
         tailored_resume = str(self.llm.invoke(resume_prompt).content)
         
