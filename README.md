@@ -1,4 +1,4 @@
-# 🎯 Resume Tailor - AI-Powered Job Application Suite
+# 🎯 Job Ready AI- AI-Powered Job Application Suite
 
 **Resume Tailor** is a comprehensive AI-powered platform that helps job seekers optimize their resumes, generate personalized cover letters, and analyze ATS compatibility. The platform features both a modern React frontend and a powerful Python backend with Streamlit support.
 
