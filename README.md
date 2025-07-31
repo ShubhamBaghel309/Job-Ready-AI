@@ -3,6 +3,7 @@
 **Resume Tailor** is a comprehensive AI-powered platform that helps job seekers optimize their resumes, generate personalized cover letters, and analyze ATS compatibility. The platform features both a modern React frontend and a powerful Python backend with Streamlit support.
 
 ![Resume Tailor Banner](IMAGES/IMG1.png)
+Live App="https://jobready.streamlit.app/"
 
 ## ✨ Features
 
@@ -12,13 +13,6 @@
 - **ATS Score Analysis**: Get detailed scoring on how well your resume performs with Applicant Tracking Systems
 - **Cover Letter Generation**: Create personalized cover letters based on your resume and job requirements
 - **Cold Email Templates**: Generate professional networking emails for job opportunities
-
-### 🚀 Modern Frontend
-- **React + TypeScript**: Modern, type-safe frontend with excellent developer experience
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Smooth Animations**: Powered by Framer Motion for engaging user interactions
-- **Glass Morphism UI**: Beautiful, modern design with light blue gradients
-- **Real-time Feedback**: Toast notifications and loading states for better UX
 
 ### 🔧 Powerful Backend
 - **AI-Powered Analysis**: Uses Groq's LLaMA models for intelligent resume processing
@@ -30,30 +24,21 @@
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **React Router** for navigation
-- **React Hook Form** for form handling
-- **Lucide React** for icons
+- Streamlit
 
 ### Backend
 - **Python 3.8+**
-- **Streamlit** for web interface
 - **LangChain** for LLM integration
 - **Groq API** for AI processing
 - **SentenceTransformers** for semantic analysis
 - **PyPDF2 & python-docx** for document processing
-- **BeautifulSoup** for web scraping
+- **Webbaseloader** for web scraping
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
 - **Python** (3.8 or higher) - [Download here](https://python.org/)
-- **Git** - [Download here](https://git-scm.com/)
 - **Groq API Key** - [Get your key here](https://console.groq.com/)
 
 ## 🚀 Installation & Setup
@@ -61,7 +46,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/resume-tailor.git
+git clone https://github.com/ShubhamBaghel309/Job-Ready-AI.git
 cd resume-tailor
 ```
 
@@ -104,23 +89,7 @@ streamlit run main.py
 # The app will be available at http://localhost:8501
 ```
 
-### 3. Frontend Setup (React)
 
-#### Navigate to Frontend Directory
-
-```bash
-cd frontend
-```
-
-#### Install Node.js Dependencies
-
-```bash
-# Install all dependencies
-npm install
-
-# Or using yarn
-yarn install
-```
 
 #### Configure Frontend Environment
 
@@ -218,26 +187,7 @@ resume-tailor/
 
 ## 🔧 Development
 
-### Running in Development Mode
 
-```bash
-# Start backend with auto-reload
-streamlit run main.py --server.runOnSave=true
-
-# Start frontend with hot reload
-cd frontend && npm run dev
-```
-
-### Building for Production
-
-```bash
-# Build the frontend
-cd frontend && npm run build
-
-# The built files will be in frontend/dist/
-```
-
-### Available Scripts
 
 #### Backend Scripts
 ```bash
@@ -246,24 +196,6 @@ streamlit run main.py
 
 # Run with auto-reload
 streamlit run main.py --server.runOnSave=true
-```
-
-#### Frontend Scripts
-```bash
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
 ```
 
 ## 🔐 API Configuration
@@ -288,13 +220,6 @@ npm run lint:fix
 
 ## 🎨 Customization
 
-### Frontend Themes
-
-The frontend uses Tailwind CSS with a custom theme. You can modify colors and styles in:
-
-- `frontend/tailwind.config.js` - Tailwind configuration
-- `frontend/src/index.css` - Global styles and custom utilities
-
 ### Backend Templates
 
 Resume templates can be customized in:
@@ -312,137 +237,16 @@ Resume templates can be customized in:
    echo $GROQ_API_KEY  # Should show your key
    ```
 
-2. **Port already in use**
-   ```bash
-   # Find and kill process using port
-   # Windows:
-   netstat -ano | findstr :8501
-   taskkill /PID <process_id> /F
-   
-   # macOS/Linux:
-   lsof -ti:8501 | xargs kill
-   ```
-
 3. **Module not found errors**
    ```bash
    # Reinstall dependencies
    pip install -r requirements.txt --force-reinstall
    ```
 
-4. **Frontend build issues**
-   ```bash
-   # Clear cache and reinstall
-   cd frontend
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
 
 ### Performance Tips
 
 - Use a virtual environment for Python dependencies
-- Enable GPU acceleration if available
 - Consider using Redis for caching (advanced)
-- Optimize images in the `IMAGES/` directory
 
-## 📝 Environment Variables Reference
 
-### Backend (.env)
-```env
-# Required
-GROQ_API_KEY=your_groq_api_key
-
-# Optional
-OPENAI_API_KEY=your_openai_key
-DEBUG=true
-LOG_LEVEL=INFO
-```
-
-### Frontend (frontend/.env)
-```env
-# API Configuration
-VITE_API_BASE_URL=http://localhost:8000
-VITE_APP_NAME=Resume Tailor
-
-# Optional
-VITE_DEBUG=true
-VITE_ANALYTICS_ID=your_analytics_id
-```
-
-## 🚀 Deployment
-
-### Frontend Deployment (Vercel/Netlify)
-
-1. **Build the frontend**:
-   ```bash
-   cd frontend && npm run build
-   ```
-
-2. **Deploy to Vercel**:
-   ```bash
-   npm install -g vercel
-   vercel --prod
-   ```
-
-3. **Deploy to Netlify**:
-   ```bash
-   npm install -g netlify-cli
-   netlify deploy --prod --dir=dist
-   ```
-
-### Backend Deployment (Streamlit Cloud)
-
-1. **Push to GitHub**
-2. **Connect to Streamlit Cloud**
-3. **Add environment variables in Streamlit settings**
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our contributing guidelines:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature-name`
-3. **Make your changes**: Follow the coding standards
-4. **Test thoroughly**: Ensure both frontend and backend work
-5. **Submit a pull request**: Describe your changes clearly
-
-### Development Guidelines
-
-- Follow TypeScript best practices for frontend
-- Use Python type hints for backend code
-- Write clear commit messages
-- Add tests for new features
-- Update documentation as needed
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Groq** for providing excellent LLM APIs
-- **Streamlit** for the amazing web framework
-- **React** and **Vite** for the modern frontend stack
-- **Tailwind CSS** for beautiful styling
-- **LangChain** for LLM integration tools
-
-## 📞 Support
-
-Having issues? Here's how to get help:
-
-1. **Check the Troubleshooting section** above
-2. **Search existing issues** on GitHub
-3. **Create a new issue** with detailed information
-4. **Join our community** discussions
-
-## 🔗 Links
-
-- **Live Demo**: [Coming Soon]
-- **Documentation**: [GitHub Wiki]
-- **Issues**: [GitHub Issues]
-- **Discussions**: [GitHub Discussions]
-
----
-
-**Built with ❤️ by the Resume Tailor Team**
-
-*Helping job seekers land their dream jobs, one optimized resume at a time.*
